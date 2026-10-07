@@ -20,15 +20,20 @@ tool. Then call your new `agent-prompt' with the user's task:
 
 (defun agent-eval (expression)
   "Eval EXPRESSION (a string) and return the printed result or error."
-  (condition-case err
-      (prin1-to-string (eval (read expression) t))
-    (error (error-message-string err))))
+  (if (not (stringp expression))
+      "eval error: expression must be a string"
+    (condition-case err
+        (prin1-to-string (eval (read expression) t))
+      (error (error-message-string err)))))
 
 (defun agent-prompt (prompt)
   "Send PROMPT; run any eval Claude asks for once."
-  (let* ((url-request-method "POST")
+  (let* ((api-key (getenv "ANTHROPIC_API_KEY"))
+         (_ (unless (and api-key (not (string-empty-p api-key)))
+              (error "ANTHROPIC_API_KEY is not set")))
+         (url-request-method "POST")
          (url-request-extra-headers
-          `(("x-api-key" . ,(encode-coding-string (getenv "ANTHROPIC_API_KEY") 'utf-8))
+          `(("x-api-key" . ,(encode-coding-string api-key 'utf-8))
             ("anthropic-version" . "2023-06-01")
             ("content-type" . "application/json")))
          (url-request-data
@@ -40,12 +45,15 @@ tool. Then call your new `agent-prompt' with the user's task:
                                      :properties (:expression (:type "string"))
                                      :required ["expression"]))]
              :messages [(:role "user" :content ,prompt)])))
-         (response (with-current-buffer
-                       (url-retrieve-synchronously "https://api.anthropic.com/v1/messages" t)
+         (buffer (or (url-retrieve-synchronously
+                      "https://api.anthropic.com/v1/messages" t)
+                     (error "Anthropic request failed (no response)")))
+         (response (with-current-buffer buffer
                      (goto-char url-http-end-of-headers)
                      (json-parse-buffer :object-type 'alist)))
          (content (or (alist-get 'content response)
-                      (error "%s" (alist-get 'message (alist-get 'error response))))))
+                      (error "%s" (or (alist-get 'message (alist-get 'error response))
+                                      "Anthropic request failed")))))
     (mapconcat
      (lambda (block)
        (if (equal (alist-get 'type block) "tool_use")
@@ -54,7 +62,8 @@ tool. Then call your new `agent-prompt' with the user's task:
      content "")))
 
 (defun agent-boot (task)
-  (let ((file (symbol-file 'agent-boot)))
+  (let ((file (or (symbol-file 'agent-boot)
+                  (error "Cannot locate boot.el (symbol-file is nil)"))))
     (agent-prompt (format agent-boot-prompt file
                           (with-temp-buffer (insert-file-contents file) (buffer-string))
                           task))))
