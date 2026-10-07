@@ -10,9 +10,7 @@ Needs Docker and `ANTHROPIC_API_KEY` in the environment.
 
 ### Demo
 
-Bootstrap into a chat, say hello, then ask Ouro to build a fireworks tool:
-
-https://github.com/dtornow/ouro/blob/main/media/ouro-demo.mp4
+Bootstrap into a chat, say hello, then ask Ouro to build a fireworks tool — [watch the demo](media/ouro-demo.mp4):
 
 <video src="media/ouro-demo.mp4" controls width="720"></video>
 
