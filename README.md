@@ -8,6 +8,19 @@ Minimal agent harness: one LLM request, one round of eval. The agent bootstraps 
 
 Needs Docker and `ANTHROPIC_API_KEY` in the environment.
 
+### Demo
+
+Bootstrap into a chat, say hello, then ask Ouro to build a fireworks tool:
+
+https://github.com/dtornow/ouro/blob/main/media/ouro-demo.mp4
+
+<video src="media/ouro-demo.mp4" controls width="720"></video>
+
+<p align="center">
+  <img src="media/ouro-hello.png" alt="Ouro chat hello" width="360" />
+  <img src="media/ouro-fireworks.png" alt="Ouro fireworks" width="360" />
+</p>
+
 ### Step 1
 
 Start the Emacs container:
