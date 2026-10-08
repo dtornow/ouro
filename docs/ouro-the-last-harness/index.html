@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ouro. The Last Harness</title>
+  <meta name="description" content="An agent that bootstraps itself from one prompt and one tool call.">
+  <meta name="author" content="Dominik Tornow">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://dtornow.github.io/ouro/ouro-the-last-harness/">
+  <link rel="alternate" type="application/rss+xml" title="Ouro" href="../feed.xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Ouro. The Last Harness">
+  <meta property="og:description" content="An agent that bootstraps itself from one prompt and one tool call.">
+  <meta property="og:url" content="https://dtornow.github.io/ouro/ouro-the-last-harness/">
+  <meta property="og:image" content="https://dtornow.github.io/ouro/assets/og.jpg">
+  <meta property="article:published_time" content="2026-10-08T15:55:32Z">
+  <meta property="article:author" content="Dominik Tornow">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ouro. The Last Harness">
+  <meta name="twitter:description" content="An agent that bootstraps itself from one prompt and one tool call.">
+  <meta name="twitter:image" content="https://dtornow.github.io/ouro/assets/og.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/design-system.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Ouro. The Last Harness",
+    "datePublished": "2026-10-08T15:55:32Z",
+    "author": {
+      "@type": "Person",
+      "name": "Dominik Tornow",
+      "url": "https://www.dtornow.com/"
+    },
+    "image": "https://dtornow.github.io/ouro/assets/og.jpg",
+    "mainEntityOfPage": "https://dtornow.github.io/ouro/ouro-the-last-harness/",
+    "description": "An agent that bootstraps itself from one prompt and one tool call."
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="masthead">
+    <div class="wrap masthead-inner">
+      <a class="wordmark" href="../">Ouro</a>
+      <span class="mast-meta">Essay</span>
+    </div>
+  </header>
+  <main id="content">
+    <img class="mark" src="../assets/mark.png" width="382" height="414" alt="An ouroboros eating its tail, lettered Ouro, with the line All other harnesses are bloat.">
+    <article class="wrap">
+      <header class="essay-head">
+        <p class="kicker">Essay</p>
+        <h1>Ouro. The Last Harness</h1>
+        <p class="byline">
+          <a href="https://www.dtornow.com/">Dominik Tornow</a>
+          <span class="sep" aria-hidden="true">·</span>
+          <time datetime="2026-10-08">8 October 2026</time>
+          <span class="sep" aria-hidden="true">·</span>
+          <a href="https://x.com/dominiktornow/status/2108224785918439600">Originally on X</a>
+        </p>
+      </header>
+      <div class="prose">
+        <p class="lede">An agent that bootstraps itself from one prompt and one tool call.</p>
+
+        <p>If you spend 30+ seconds on X, you notice that seemingly everybody builds a harness. There are Codex, Claude, Cursor, OpenCode, OpenClaw, Hermes, and many others. The goal is the same: give an LLM the ability to act. The philosophies diverge.</p>
+
+        <p>My favorite harness is <a href="https://x.com/pidotdev">Pi by @pidotdev</a>. Pi is a minimal harness. If you need a tool, a command, or a UI extension, just ask Pi and Pi manipulates itself in place. Hit <code>/reload</code> and keep going. That’s a pretty cool idea: start with a minimal, generic kernel that morphs itself into the product.</p>
+
+        <p class="question">Is Pi the global minimum of agentic harnesses? Or can we go smaller? Can we craft a truly minimal kernel from which all other harnesses emerge?</p>
+
+        <h2>Ouro</h2>
+
+        <p>My answer to this question is Ouro, an agentic harness embedded in Emacs, named for the ouroboros, the snake that eats its own tail. The harness that eats all other harnesses.</p>
+
+        <p>Emacs is built as an extensible kernel: it embeds Lisp and evals extensions into the running editor. A plugin isn’t just loaded beside Emacs; the plugin becomes part of Emacs, down to overwriting existing functions.</p>
+
+        <p>With its ability to evaluate code into the shared runtime, introspection and modification of itself, Emacs Lisp provides an ideal substrate for Ouro.</p>
+
+        <h2>Bootstrap</h2>
+
+        <p>Ouro bootstraps itself into existence from a single call to an LLM and a single call to eval.</p>
+
+        <figure class="snippet">
+          <figcaption>Emacs Lisp</figcaption>
+          <pre><code>(defvar agent-boot-prompt
+  "You are running inside GNU Emacs. Your only tool, eval, evaluates Emacs \
+Lisp in this Emacs. This is your harness:
+
+%s
+
+This call is a bootstrap: `agent' makes one request, runs your evals once \
+for side effects, and drops their results. You will not see any eval result \
+in this call, so do not explore. In a single eval, redefine `agent' so that \
+it sends tool_result blocks back through `agent-prompt' and loops until you \
+reply without calling a tool. Then call your new `agent' with the user's task:
+
+%s")
+
+(defun agent (prompt)
+  "Send PROMPT; run any eval Claude asks for once."
+  (mapconcat
+   (lambda (block)
+     (if (equal (alist-get 'type block) "tool_use")
+         (agent-eval (alist-get 'expression (alist-get 'input block)))
+       (or (alist-get 'text block) "")))
+   (agent-prompt `[(:role "user" :content ,prompt)])
+   ""))
+
+(defun agent-boot (task)
+  (agent (format agent-boot-prompt this-file task)))</code></pre>
+        </figure>
+
+        <p><strong>We provide the agent with a prompt that conveys the gravity of its situation:</strong> The LLM has one chance to become sentient, or in other words, one chance to rewrite the agent function from a single tool call to a tool-calling loop that is able to achieve a goal over multiple turns.</p>
+
+        <p>At which point, you have a harness.</p>
+
+        <h2>Ouro in action</h2>
+
+        <p class="caution">To see Ouro in action, head over to GitHub and follow the instructions in the README at <a href="https://github.com/dtornow/ouro">github.com/dtornow/ouro</a>. I strongly advise to run this experiment in Docker. There are no other guardrails.</p>
+
+        <p>We start Ouro with a task. Here we ask to build a chat interface as a starting point to have an ongoing conversation.</p>
+
+        <figure class="snippet">
+          <figcaption>Emacs Lisp</figcaption>
+          <pre><code>(agent-boot "Build a chat interface so the user can talk with you in this Emacs.")</code></pre>
+        </figure>
+
+        <p>And indeed: The LLM emits and evals the program that replaces the one-shot agent with a loop that works turn by turn to extend itself and meet our goal.</p>
+
+        <p>This is the code the LLM generated while I recorded the video of the agent bootstrapping itself into a chat agent.</p>
+
+        <figure class="snippet">
+          <figcaption>Emacs Lisp</figcaption>
+          <pre><code>(progn
+  (defun agent (prompt)
+    "Send PROMPT; loop running evals until Claude replies without a tool call."
+    (let ((messages (vector (list :role "user" :content prompt)))
+          (result nil)
+          (done nil))
+      (while (not done)
+        (let* ((content (agent-prompt messages))
+               (uses (seq-filter (lambda (b)
+                                   (equal (alist-get 'type b) "tool_use"))
+                                 content)))
+          (setq messages
+                (vconcat messages
+                         (vector (list :role "assistant" :content content))))
+          (if (null uses)
+              (setq done t
+                    result (mapconcat (lambda (b) (or (alist-get 'text b) ""))
+                                      content ""))
+            (let ((results
+                   (mapcar (lambda (b)
+                             (list :type "tool_result"
+                                   :tool_use_id (alist-get 'id b)
+                                   :content (agent-eval
+                                             (alist-get 'expression
+                                                        (alist-get 'input b)))))
+                           uses)))
+              (setq messages
+                    (vconcat messages
+                             (vector (list :role "user"
+                                           :content (vconcat results)))))))))
+      result))
+  (agent "Build a chat interface so the user can talk with you in this Emacs."))</code></pre>
+        </figure>
+
+        <figure class="film">
+          <video controls playsinline preload="metadata" poster="../assets/poster.jpg" width="1280" height="720">
+            <source src="../assets/bootstrap.mp4" type="video/mp4">
+          </video>
+          <figcaption>Ouro bootstrapping itself into a chat agent.</figcaption>
+        </figure>
+
+        <h2>Conclusion</h2>
+
+        <p>How small can we go? Ouro is one prompt and one tool, eval. That’s pretty small. Everything else is written by the agent into the runtime the agent is running in. The loop, the tools, the chat interface.</p>
+
+        <p>Is Ouro a real agentic harness? No. There are no guardrails, no permissions, nothing stopping the agent from redefining itself into something that never returns. In fact, there is no guarantee the agent bootstraps itself in the first place. Ouro is a fun thought experiment in an environment capable of self-inspection and self-modification.</p>
+
+        <p>But the experiment does make a point: with the right primitives and with the ability to inspect and modify, LLMs are capable of growing complex systems from the smallest seed.</p>
+
+        <h2 class="notes">Notes</h2>
+        <ul>
+          <li>You can get the same result using Smalltalk or JavaScript in a webpage, any environment that has the ability to eval code into its runtime.</li>
+          <li><a href="https://x.com/GeoffreyHuntley">@GeoffreyHuntley</a>, inventor of the Ralph Loop, is also <a href="https://x.com/GeoffreyHuntley/status/2107080798209794317">cooking Lisp</a>.</li>
+        </ul>
+      </div>
+    </article>
+  </main>
+  <footer class="colophon">
+    <div class="wrap colophon-inner">
+      <p>One prompt. One tool. The harness writes the rest.</p>
+      <nav class="colophon-links" aria-label="Elsewhere">
+        <a href="../">Journal</a>
+        <a href="https://github.com/dtornow/ouro">Repository</a>
+        <a href="https://x.com/dominiktornow/status/2108224785918439600">Original on X</a>
+        <a href="https://www.dtornow.com/">Dominik Tornow</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
