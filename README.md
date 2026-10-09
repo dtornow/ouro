@@ -38,7 +38,7 @@ docker exec -it boot-emacs emacs -nw --no-splash -l /boot.el \
 
 Ouro, ported to other environments:
 
-- [ouro-python](https://github.com/renerocksai/ouro-python)
+- [ouro-python](https://github.com/renerocksai/ouro-python) by [renerocksai](https://github.com/renerocksai)
   Python
-- [ouro-nvim](https://github.com/renerocksai/ouro-nvim)
+- [ouro-nvim](https://github.com/renerocksai/ouro-nvim) by [renerocksai](https://github.com/renerocksai)
   Neovim, Lua
