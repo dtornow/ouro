@@ -33,3 +33,12 @@ Bootstrap the agent:
 docker exec -it boot-emacs emacs -nw --no-splash -l /boot.el \
   --eval '(agent-boot "Build a chat interface so the user can talk with you in this Emacs.")'
 ```
+
+# The pit of snakes
+
+Ouro, ported to other environments:
+
+- [ouro-python](https://github.com/renerocksai/ouro-python)
+  Python
+- [ouro-nvim](https://github.com/renerocksai/ouro-nvim)
+  Neovim, Lua
