@@ -4,7 +4,7 @@
 
 <h1 align="center">Ouro</h1>
 
-Ouro. The Last Harness. ([essay](https://dtornow.github.io/ouro/ouro-the-last-harness/)). Minimal agent harness: one LLM request, one round of eval. The agent bootstraps by redefining `agent-prompt` into a real loop.
+Ouro. The Last Harness ([essay](https://dtornow.github.io/ouro/ouro-the-last-harness/)). Minimal agent harness: one LLM request, one round of eval. The agent bootstraps by redefining `agent-prompt` into a real loop.
 
 Needs Docker and `ANTHROPIC_API_KEY` in the environment.
 
