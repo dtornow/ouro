@@ -127,6 +127,13 @@ async function agentLoad(onProgress) {
   if (!navigator.gpu) {
     throw new Error("This browser has no WebGPU, so the model cannot run in the tab.");
   }
+  var adapter = await navigator.gpu.requestAdapter();
+  var info = adapter && (adapter.info || {});
+  if (info && info.architecture === "swiftshader") {
+    var cpu = await import("./wasm-engine.js");
+    engine = await cpu.createEngine(onProgress);
+    return;
+  }
   var model = await agentModel();
   var webllm = await import("https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.86/+esm");
   engine = await webllm.CreateMLCEngine(model, {
